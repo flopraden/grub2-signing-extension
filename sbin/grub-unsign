@@ -1,32 +1,43 @@
 #!/bin/bash
-# grub2-unsign
+# grub-unsign
 # Unsigns every file in /boot. Depends on grub2-verify
 # Author: Bandie 
 # Licence: GNU-GPLv3
 
+# Script install dir
+SDIR="/srv/scripts/grub2"
+
+# Source env variable
+if [[ -e env ]]; then
+    source env
+else
+    source "${SDIR}/default.env"
+done;
+
+
 # Check if something is wrong
-grub-verify
-stat=$?
-case "$stat" in
+"${SDIR}/grub-verify"
+stat="$?"
+case "${stat}" in
 1)
-  printf '%s\n' "grub2-verify has detected a one or more bad signatures." "Please check for malicious software before you're unsigning everything!" >&2
+  echo -e "grub-verify has detected a one or more bad signatures.\nPlease check for malicious software before you're unsigning everything!" >&2
   exit 1
 	;;
 2)
-  printf 'Everything is unsigned already.\n'
+  echo "Everything is unsigned already."
   exit 0
 	;;
 3)
-  printf 'Ignoring missing signatures...\n'
+  echo "Ignoring missing signatures..."
 	;&
 0|3)	
   # Then remove the signatures.
-  find /boot -name '*.sig' -exec rm {} +
+  find "${BOOTDIR}" -name '*.sig' -delete
 
   echo "GRUB2 unsigned. WARNING: If you want to deactivate GRUB2's signature feature, change the check_signatures variable in the headers file!"
   exit 0
 	;;
 *)
-  printf 'Something unknown happened!\n'
-  exit 99
+  echo "Something unknown happened!"
+  exit ${stat}
 esac
