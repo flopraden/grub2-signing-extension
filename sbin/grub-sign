@@ -1,36 +1,48 @@
 #!/bin/bash
-# grub2-sign
+# grub-sign
 # Signs everything important in /boot. Depends on grub2-verify.
-# Author: Bandie
+# Author: Bandie Kojote
 # Licence: GNU-GPLv3
 
-function sign(){
-  for f in `find /boot -type f`
-  do
-    if gpg --detach-sign $f
-    then
-      echo $f signed.
-    else
-      return 1
-    fi
-  done
-  return 0
-}
+# Script install dir
+SDIR="/srv/scripts/grub2"
+# Source env variable
+if [[ -e env ]]; then
+    source env
+else
+    source "${SDIR}/default.env"
+done;
 
 
-# Running grub2-verify first to prevent bad people and double signing
-echo "Running grub2-verify to check if everything is unsigned..." >&2
-grub-verify
-if (( $? < 2 )); then
-    echo "Run grub2-unsign first." >&2
+
+
+# Running grub-verify first to prevent double signing
+echo "Running grub-verify to check if everything is unsigned..."
+"${SDIR}/grub-verify"
+if [ $? -lt 2 ]
+then
+    echo "Run grub-unsign first."
     exit 1
 fi
 
+# Find GRUB2 datas
+for i in `find /boot -name "*.cfg" -or -name "*.lst" -or \
+ -name "*.mod" -or -name "vmlinuz*" -or -name "initrd*" -or \
+ -name "grubenv" -or -name "*.asc" -or -name "*.pf2" -or \
+ -name "*.efi" -or -name "*.elf" -or -name "*.bin" -or \
+ -name "*-generic" -or -name "*.jpg" -or -name "*.png" -or -name "*.mo"`;
+do
+    # Signing
+    gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty $i
+    if [ $? -eq 0 ]
+    then
+        echo "$i signed."
+    else
+        echo "ERROR!"
+	      break
+    fi
+done
 
-if ! sign
-then
-  sign
-else
-  echo -e "\nDone!"
-fi
 
+echo "Done!"
+exit 0
