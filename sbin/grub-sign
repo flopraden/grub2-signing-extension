@@ -25,24 +25,26 @@ then
     exit 1
 fi
 
+echo "==== Signing files ===="
 # Find GRUB2 datas
-for i in `find /boot -name "*.cfg" -or -name "*.lst" -or \
+for i in $(find "${BOOTDIR}" -name "*.cfg" -or -name "*.lst" -or \
  -name "*.mod" -or -name "vmlinuz*" -or -name "initrd*" -or \
  -name "grubenv" -or -name "*.asc" -or -name "*.pf2" -or \
  -name "*.efi" -or -name "*.elf" -or -name "*.bin" -or \
- -name "*-generic" -or -name "*.jpg" -or -name "*.png" -or -name "*.mo"`;
+ -name "*-generic" -or -name "*.jpg" -or -name "*.png" -or -name "*.mo");
 do
     # Signing
-    gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty $i
+    echo " +++ ${i}"
+    gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty "${i}"
     if [ $? -eq 0 ]
     then
-        echo "$i signed."
+        echo " ++++++ signed ++++++"
     else
-        echo "ERROR!"
+        echo " ****** ERROR! ******"
 	      break
     fi
 done
 
 
-echo "Done!"
+echo "====== Done! ====="
 exit 0
