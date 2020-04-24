@@ -1,8 +1,19 @@
 #!/bin/bash
-# grub2-verify
+# grub-verify
 # Checks the signatures of every file which is has a signature in /boot.
 # Author: Bandie
 # Licence: GNU-GPLv3
+
+# Script install dir
+SDIR="/srv/scripts/grub2"
+
+# Source env variable
+if [[ -e env ]]; then
+    source env
+else
+    source "${SDIR}/default.env"
+done;
+
 
 red=$(tput setaf 1)
 green=$(tput setaf 2)
@@ -14,7 +25,7 @@ missing_files=( )
 
 # Signature check part + error counter + file counter + file list
 
-echo "Checking signatures in /boot..." >&2
+echo "Checking signatures in \"${BOOTDIR}\"..." >&2
 while IFS= read -r -d '' i
 do
     if ! gpg --verify-files "$i" >/dev/null 2>&1
@@ -22,16 +33,16 @@ do
         error_files+=( "$i" )
     fi
     all_files+=( "$i" )
-done < <(find /boot -type f -name "*.sig" -print0)
+done < <(find "${BOOTDIR}" -type f -name "*.sig" -print0)
 
-echo "Checking missing signatures in /boot..." >&2
+echo "Checking missing signatures in \"${BOOTDIR}\"..." >&2
 while IFS= read -r -d '' i
 do
     if test ! -f ${i}.sig
     then
         missing_files+=( "$i" )
     fi
-done < <(find /boot -type f -not -name "*.sig" -print0)
+done < <(find "${BOOTDIR}" -type f -not -name "*.sig" -print0)
 
 # Nothing to verify? Exit 2.
 if (( ${#all_files[@]} == 0 ))
@@ -41,12 +52,12 @@ then
 fi
 
 # Message signatures
-printf '%s' 'Found ' >&2
+echo -ne 'Found ' >&2
 if (( ${#error_files} == 0 ))
 then
-    printf '%s' "$green" "no" "$normal" >&2
+    echo -ne "$green" "no" "$normal" >&2
 else
-    printf '%s' "$red" "${#error_files[@]}" "$normal" >&2
+    echo -ne "$red" "${#error_files[@]}" "$normal" >&2
 fi
 if (( ${#error_files[@]} == 1 ))
 then
@@ -56,12 +67,12 @@ else
 fi
 
 # Message missing
-printf '%s' 'Found ' >&2
+echo -ne 'Found ' >&2
 if (( ${#missing_files} == 0 ))
 then
-    printf '%s' "$green" "no" "$normal" >&2
+    echo -ne "$green" "no" "$normal" >&2
 else
-    printf '%s' "$red" "${#missing_files[@]}" "$normal" >&2
+    echo -ne "$red" "${#missing_files[@]}" "$normal" >&2
 fi
 if (( ${#missing_files[@]} == 1 ))
 then
@@ -75,12 +86,12 @@ fi
 # File list
 if (( ${#error_files[@]} > 0 ))
 then
-    printf 'BAD signature: %s\n' "${error_files[@]}"
+    echo "BAD signature: ${error_files[@]}"
 fi
 
 if (( ${#missing_files[@]} > 0 ))
 then
-    printf 'MISSING signatures: %s\n' "${missing_files[@]}"
+    echo "MISSING signatures: ${missing_files[@]}"
 fi
 
 # Exit codes
