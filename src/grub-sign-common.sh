@@ -137,7 +137,7 @@ verif-file() {
 
     # If sig is empty, gpg return 0 so correct error to 255
     if [[ (${ret} == 0) && ("x${out}" == "x") ]]; then
-        ret=255
+        ret=3
         out="GPG output is empty"
     fi;
 
