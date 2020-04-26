@@ -53,7 +53,8 @@ declare -a FILES;
 list-all-files() {
     FILES=();
     mapfile -d $'\0' FILES < <(find "${BOOTDIR}" '(' -type f -or \
-                                    -type l ')' -and ! -xtype l -and '(' \
+                                    -type l ')' -and ! -xtype l -and \
+                                    ! -name "*.sig" -and '(' \
                                     -name "*.cfg" -or \
                                     -name "*.lst" -or -name "*.mod" -or \
                                     -name "vmlinuz*" -or -name "initrd*" -or \
@@ -131,9 +132,15 @@ verif-file() {
     fi;
 
     # Testing signature
-    out=$(gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --no-tty --verify-files "${file}.sig" 2>&1)
+    out=$(gpg --homedir "${GPGDIR}" ${GPGARGS} --no-tty --verify-files "${file}.sig" 2>&1)
     ret=$?
-    
+
+    # If sig is empty, gpg return 0 so correct error to 255
+    if [[ (${ret} == 0) && ("x${out}" == "x") ]]; then
+        ret=255
+        out="GPG output is empty"
+    fi;
+
     if [[  "x${quiet}" == "x1" ]]; then
         if [ ${ret} -eq 0 ]; then
             # Clean out if no error
