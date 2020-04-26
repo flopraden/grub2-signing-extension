@@ -13,7 +13,7 @@ if [[ -e "${CFGDIR}/env" ]]; then
     source "${CFGDIR}/env"
 else
     source "${CFGDIR}/default.env"
-done;
+fi;
 
 # Check if something is wrong
 "${SDIR}/grub-verify"
