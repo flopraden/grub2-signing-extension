@@ -28,7 +28,7 @@ missing_files=( )
 echo "Checking signatures in \"${BOOTDIR}\"..." >&2
 while IFS= read -r -d '' i
 do
-    if ! gpg --verify-files "$i" >/dev/null 2>&1
+    if ! gpg --homedir=${GPGDIR} --verify-files "$i" >/dev/null 2>&1
     then
         error_files+=( "$i" )
     fi
