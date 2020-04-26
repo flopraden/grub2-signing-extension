@@ -9,6 +9,7 @@ install:
 	install -D -m744 src/grub-verify /usr/local/sbin/grub-verify
 	install -D -m744 src/grub-sign /usr/local/sbin/grub-sign
 	install -D -m744 src/grub-unsign /usr/local/sbin/grub-unsign
+	install -D -m744 src/grub-sign-common.sh /usr/local/sbin/grub-sign-common.sh
 	@printf "Script installed in /usr/local/sbin."
 	./scripts/install-conf
 	@printf "Configfile installed in /etc/grub-sign."
