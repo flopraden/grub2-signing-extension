@@ -50,7 +50,7 @@ e_note() { printf "${underline}${bold}${blue}Note:${reset}  ${blue}%s${reset}\n"
 # Erase:
 #  + FILES: list of file as array
 declare -a FILES;
-list-all-file() {
+list-all-files() {
     FILES=()
     mapfile -d $'\0' FILES < <(find "${BOOTDIR}" -name "*.cfg" -or \
                                     -name "*.lst" -or -name "*.mod" -or \
@@ -87,7 +87,7 @@ sign-file() {
 
     out=$(gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty "${file}" 2>&1)
     ret=$?
-    if [[  "x${quiet}" == "x1"]]; then
+    if [[  "x${quiet}" == "x1" ]]; then
         if [ ${ret} -eq 0 ]; then
             # Clean out if no error
             out=""
@@ -121,7 +121,7 @@ verif-file() {
     local quiet="$2";
     # test if a signature is present
     if [[ ! -e "${file}.sig" ]]; then
-        if [[  "x${quiet}" != "x1"]]; then
+        if [[  "x${quiet}" != "x1" ]]; then
             echo -e " ${yellow}sign missing!${normal}"
         fi;
         return 3
@@ -131,7 +131,7 @@ verif-file() {
     out=$(gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --no-tty --verify-files "${file}.sig" 2>&1)
     ret=$?
     
-    if [[  "x${quiet}" == "x1"]]; then
+    if [[  "x${quiet}" == "x1" ]]; then
         if [ ${ret} -eq 0 ]; then
             # Clean out if no error
             out=""
