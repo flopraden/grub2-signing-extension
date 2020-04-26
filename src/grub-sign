@@ -15,38 +15,26 @@ else
     source "${CFGDIR}/default.env"
 fi;
 
-
-
+# sourcing common function
+source "${SDIR}/grub-sign-common.sh"
 
 # Running grub-verify first to prevent double signing
-echo "Running grub-verify to check if everything is unsigned..."
+e_header "Running grub-verify to check if everything is unsigned..."
 "${SDIR}/grub-verify"
 if [ $? -lt 2 ]
 then
-    echo "Run grub-unsign first."
+    e_error "Run grub-unsign first."
     exit 1
 fi
 
-echo "==== Signing files ===="
+e_header "Signing files"
 # Find GRUB2 datas
-for i in $(find "${BOOTDIR}" -name "*.cfg" -or -name "*.lst" -or \
- -name "*.mod" -or -name "vmlinuz*" -or -name "initrd*" -or \
- -name "grubenv" -or -name "*.asc" -or -name "*.pf2" -or \
- -name "*.efi" -or -name "*.elf" -or -name "*.bin" -or \
- -name "*-generic" -or -name "*.jpg" -or -name "*.png" -or -name "*.mo");
-do
+list-all-files
+e_arrow "${#FILES[@]} files to sign"
+for F in "${FILES[@]}"; do 
     # Signing
-    echo " +++ ${i}"
-    gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty "${i}"
-    if [ $? -eq 0 ]
-    then
-        echo " ++++++ signed ++++++"
-    else
-        echo " ****** ERROR! ******"
-	      break
-    fi
+    echo -n " +++ ${F}"
+    sign-file "${F}"
 done
-
-
-echo "====== Done! ====="
+e_header "Done!"
 exit 0
