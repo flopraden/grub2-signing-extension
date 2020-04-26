@@ -51,15 +51,17 @@ e_note() { printf "${underline}${bold}${blue}Note:${reset}  ${blue}%s${reset}\n"
 #  + FILES: list of file as array
 declare -a FILES;
 list-all-files() {
-    FILES=()
-    mapfile -d $'\0' FILES < <(find "${BOOTDIR}" -name "*.cfg" -or \
+    FILES=();
+    mapfile -d $'\0' FILES < <(find "${BOOTDIR}" '(' -type f -or \
+                                    -type l ')' -and ! -xtype l -and '(' \
+                                    -name "*.cfg" -or \
                                     -name "*.lst" -or -name "*.mod" -or \
                                     -name "vmlinuz*" -or -name "initrd*" -or \
                                     -name "grubenv" -or -name "*.asc" -or \
                                     -name "*.pf2" -or -name "*.efi" -or \
                                     -name "*.elf" -or -name "*.bin" -or \
                                     -name "*-generic" -or -name "*.jpg" -or \
-                                    -name "*.png" -or -name "*.mo" \
+                                    -name "*.png" -or -name "*.mo" ')' \
                                     -print0);
     return 0;
 }
@@ -91,6 +93,8 @@ sign-file() {
         if [ ${ret} -eq 0 ]; then
             # Clean out if no error
             out=""
+        else
+            rm -f "${file}.sig"
         fi;
         ERR="${out}"
         return ${ret};
@@ -98,6 +102,7 @@ sign-file() {
     if [ ${ret} -eq 0 ]; then
         echo -e " ${green}signed${normal}."
     else
+        rm -f "${file}.sig"
         echo -e " ${red}not signed: ERROR!${normal}"
         echo " ===== out ======"
         echo "${out}"
