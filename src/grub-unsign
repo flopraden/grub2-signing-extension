@@ -15,29 +15,41 @@ else
     source "${CFGDIR}/default.env"
 fi;
 
+# sourcing common function
+source "${SDIR}/grub-sign-common.sh"
+
+quiet="$1"
+if [[ "x${quiet}" == "x" ]]; then
+    # By default quiet
+    quiet=1
+fi;
+
 # Check if something is wrong
-"${SDIR}/grub-verify"
+# Run grub-verify
+"${SDIR}/grub-verify" "$quiet"
 stat="$?"
 case "${stat}" in
 1)
-  echo -e "grub-verify has detected a one or more bad signatures.\nPlease check for malicious software before you're unsigning everything!" >&2
+    e_warning "grub-verify has detected a one or more bad signatures."
+    e_warning "Please check for malicious software before you're unsigning everything!"
   exit 1
 	;;
 2)
-  echo "Everything is unsigned already."
+  e_note "Everything is unsigned already."
   exit 0
 	;;
 3)
-  echo "Ignoring missing signatures..."
+  e_note "Ignoring missing signatures..."
 	;&
 0|3)	
   # Then remove the signatures.
   find "${BOOTDIR}" -name '*.sig' -delete
 
-  echo "GRUB2 unsigned. WARNING: If you want to deactivate GRUB2's signature feature, change the check_signatures variable in the headers file!"
+  e_success "GRUB2 unsigned."
+  e_warning "WARNING: If you want to deactivate GRUB2's signature feature, change the check_signatures variable in the grub config file!"
   exit 0
 	;;
 *)
-  echo "Something unknown happened!"
+  e_error "Something unknown happened!"
   exit ${stat}
 esac
