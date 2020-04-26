@@ -100,13 +100,11 @@ sign-file() {
         return ${ret};
     fi;
     if [ ${ret} -eq 0 ]; then
-        echo -e " ${green}signed${normal}."
+        e_success "signed."
     else
         rm -f "${file}.sig"
-        echo -e " ${red}not signed: ERROR!${normal}"
-        echo " ===== out ======"
-        echo "${out}"
-        echo " ================"
+        e_error "not signed: ERROR!"
+        e_note "${out}"
     fi
     return ${ret}
 }
@@ -127,7 +125,7 @@ verif-file() {
     # test if a signature is present
     if [[ ! -e "${file}.sig" ]]; then
         if [[  "x${quiet}" != "x1" ]]; then
-            echo -e " ${yellow}sign missing!${normal}"
+            e_warning "sign missing!"
         fi;
         return 3
     fi;
@@ -145,12 +143,10 @@ verif-file() {
         return ${ret};
     fi;
     if [ ${ret} -eq 0 ]; then
-        echo -e " ${green}verified${normal}."
+        e_success "verified."
     else
-        echo -e " ${red}signature failed: ERROR!${normal}"
-        echo " ===== out ======"
-        echo "${out}"
-        echo " ================"
+        e_error "signature failed: ERROR!"
+        e_note "${out}"
     fi
     return ${ret}
 }

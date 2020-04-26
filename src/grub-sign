@@ -30,10 +30,10 @@ fi
 e_header "Signing files"
 # Find GRUB2 datas
 list-all-files
-e_arrow "${#FILES[@]} files to sign"
+e_arrow "${yellow}${bold}${#FILES[@]}${reset} files to sign"
 for F in "${FILES[@]}"; do 
     # Signing
-    echo -n " +++ ${F}"
+    echo -n " +++ ${F} "
     sign-file "${F}"
 done
 e_header "Done!"
