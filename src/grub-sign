@@ -15,38 +15,42 @@ else
     source "${CFGDIR}/default.env"
 fi;
 
-
-
+# sourcing common function
+source "${SDIR}/grub-sign-common.sh"
 
 # Running grub-verify first to prevent double signing
-echo "Running grub-verify to check if everything is unsigned..."
-"${SDIR}/grub-verify"
-if [ $? -lt 2 ]
-then
-    echo "Run grub-unsign first."
-    exit 1
-fi
+e_header "Running grub-verify to check if everything is unsigned..."
+# Run grub-verify in quiet mode
+"${SDIR}/grub-verify" 1
+case "$?" in
+    1|3)
+        e_note "Some sig are missing or in error. You could use grub-sign-update for updating faster."
+        ;;
+    2)
+        e_note "Full signing from unsigned grub directory."
+        ;;
+    0)
+        e_note "Nothing to do, all file are signed and verified."
+        if [[ "$1" == "--force" ]]; then
+            e_warning "Forcing resign"
+        else
+            e_note "Exiting. Use --force to force a full resign."
+            exit 0;
+        fi;
+        ;;
+    *)
+        e_error "Unknown error. Full resign."
+        ;;
+esac
 
-echo "==== Signing files ===="
+e_header "Signing files"
 # Find GRUB2 datas
-for i in $(find "${BOOTDIR}" -name "*.cfg" -or -name "*.lst" -or \
- -name "*.mod" -or -name "vmlinuz*" -or -name "initrd*" -or \
- -name "grubenv" -or -name "*.asc" -or -name "*.pf2" -or \
- -name "*.efi" -or -name "*.elf" -or -name "*.bin" -or \
- -name "*-generic" -or -name "*.jpg" -or -name "*.png" -or -name "*.mo");
-do
+list-all-files
+e_arrow "${yellow}${bold}${#FILES[@]}${reset} files to sign"
+for F in "${FILES[@]}"; do 
     # Signing
-    echo " +++ ${i}"
-    gpg --homedir "${GPGDIR}" ${GPGARGS} --batch --detach-sign --no-tty "${i}"
-    if [ $? -eq 0 ]
-    then
-        echo " ++++++ signed ++++++"
-    else
-        echo " ****** ERROR! ******"
-	      break
-    fi
+    echo -n " +++ ${F} "
+    sign-file "${F}"
 done
-
-
-echo "====== Done! ====="
-exit 0
+e_header "Done!"
+exit 0;

@@ -1,0 +1,80 @@
+#!/bin/bash
+# grub-sign-update
+# update signature for missing file or bad sig.
+# Author: Praden Florian based on Bandie Kojote
+# Licence: GNU-GPLv3
+
+# Script basic conf
+SDIR="/usr/local/sbin"
+CFGDIR="/etc/grub-sign"
+
+# Source env variable
+if [[ -e "${CFGDIR}/env" ]]; then
+    source "${CFGDIR}/env"
+else
+    source "${CFGDIR}/default.env"
+fi;
+
+# sourcing common function
+source "${SDIR}/grub-sign-common.sh"
+
+quiet="$1"
+
+e_header "Updating signatures"
+# Find GRUB2 datas
+list-all-files
+e_arrow "${yellow}${bold}${#FILES[@]}${reset} files to test"
+
+declare -i bad;
+declare -i missing;
+declare -i unknown;
+declare -i ok;
+bad=0;
+missing=0
+unknown=0
+ok=0
+
+for F in "${FILES[@]}"; do
+    verif-file "${F}" 1
+    ret="$?"
+    case "${ret}" in
+        0)
+            # Signature ok
+            ok+=1;
+            continue;
+            ;;
+        1)
+            # Bad sig
+            if [[ "x${quiet}" == "x0" ]]; then
+                e_note "${F}: Bad signature."
+            fi;
+            bad+=1;
+            ;;
+        3)
+            # Missing sig
+            if [[ "x${quiet}" == "x0" ]]; then
+                e_note "${F}: Missing signature."
+            fi;
+            missing+=1;
+            ;;
+        *)
+            # Unknown error
+            if [[ "x${quiet}" == "x0" ]]; then
+                e_note "${F}: Unknown GPG error : ${ret}."
+            fi;
+            unknown+=1;
+            ;;
+    esac
+    if [[ "x${quiet}" == "x0" ]]; then
+        echo -n " +++ ${F} "
+        sign-file "${F}"
+    else
+        sign-file "${F}" 1
+    fi;
+done
+e_note "${ok} correct signatures."
+e_note "${missing} missing signatures."
+e_note "${bad} bad signatures."
+e_note "${unknown} unknown errors."
+e_header "Done!"
+exit 0;

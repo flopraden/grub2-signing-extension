@@ -4,6 +4,8 @@
 # Author: Praden Florian based on Bandie Kojote
 # Licence: GNU-GPLv3
 
+quiet="$1"
+
 # Script basic conf
 SDIR="/usr/local/sbin"
 CFGDIR="/etc/grub-sign"
@@ -15,93 +17,73 @@ else
     source "${CFGDIR}/default.env"
 fi;
 
-red=$(tput setaf 1)
-green=$(tput setaf 2)
-normal=$(tput sgr0)
+# sourcing common function
+source "${SDIR}/grub-sign-common.sh"
 
-all_files=( )
+sig_files=( )
 error_files=( )
 missing_files=( )
 
-# Signature check part + error counter + file counter + file list
-
-echo "Checking signatures in \"${BOOTDIR}\"..." >&2
-while IFS= read -r -d '' i
-do
-    if ! gpg --homedir=${GPGDIR} --verify-files "$i" >/dev/null 2>&1
-    then
-        error_files+=( "$i" )
-    fi
-    all_files+=( "$i" )
-done < <(find "${BOOTDIR}" -type f -name "*.sig" -print0)
-
-echo "Checking missing signatures in \"${BOOTDIR}\"..." >&2
-while IFS= read -r -d '' i
-do
-    if test ! -f ${i}.sig
-    then
-        missing_files+=( "$i" )
-    fi
-done < <(find "${BOOTDIR}" -type f -not -name "*.sig" -print0)
-
+e_header "Checking signatures in \"${BOOTDIR}\"..."
+list-all-files
+e_arrow "${yellow}${bold}${#FILES[@]}${reset} files to test"
+for F in "${FILES[@]}"; do
+    if [[ "x${quiet}" != "x1" ]]; then
+        echo -n " + ${F} "
+    fi;
+    verif-file "$F" ${quiet}
+    case "$?" in
+        3)
+            # Missing sig
+            missing_files+=( "${F}" )
+            ;;
+        0)
+            # Sig correct
+            sig_files+=( "${F}" )
+            ;;
+        *)
+            # Error happen
+            error_files+=( "${F}" )
+            ;;
+    esac
+done
 # Nothing to verify? Exit 2.
-if (( ${#all_files[@]} == 0 ))
-then
-    echo "Nothing to verify." >&2
+if [[ (${#sig_files[@]} == 0) && (${#error_files[@]} == 0) ]]; then
+    e_arrow "Nothing to verify."
     exit 2
 fi
 
 # Message signatures
-echo -ne 'Found ' >&2
-if (( ${#error_files} == 0 ))
-then
-    echo -ne "$green" "no" "$normal" >&2
+if (( ${#error_files} == 0 )); then
+    e_success "Found no bad signature."
 else
-    echo -ne "$red" "${#error_files[@]}" "$normal" >&2
-fi
-if (( ${#error_files[@]} == 1 ))
-then
-    echo " bad signature." >&2
-else
-    echo " bad signatures." >&2
+    e_error "Found ${#error_files[@]} bad signatures"
 fi
 
 # Message missing
-echo -ne 'Found ' >&2
-if (( ${#missing_files} == 0 ))
-then
-    echo -ne "$green" "no" "$normal" >&2
+if (( ${#missing_files} == 0 )); then
+    e_success "Found no missing signatures."
 else
-    echo -ne "$red" "${#missing_files[@]}" "$normal" >&2
-fi
-if (( ${#missing_files[@]} == 1 ))
-then
-    echo " missing signature." >&2
-else
-    echo " missing signatures." >&2
+    e_warning "Found ${#missing_files[@]} missing signatures."
 fi
 
-
+e_note "${#sig_files[@]} correct signatures"
 
 # File list
-if (( ${#error_files[@]} > 0 ))
-then
+if (( ${#error_files[@]} > 0 )); then
     echo "BAD signature: ${error_files[@]}"
 fi
 
-if (( ${#missing_files[@]} > 0 ))
-then
+if (( ${#missing_files[@]} > 0 )); then
     echo "MISSING signatures: ${missing_files[@]}"
 fi
 
 # Exit codes
-if (( ${#error_files[@]} > 0 ))
-then
+if (( ${#error_files[@]} > 0 )); then
     exit 1
 fi
 
-if (( ${#missing_files[@]} > 0 ))
-then
+if (( ${#missing_files[@]} > 0 )); then
     exit 3
 fi
 
