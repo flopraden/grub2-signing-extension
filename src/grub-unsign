@@ -1,19 +1,19 @@
 #!/bin/bash
 # grub-unsign
 # Unsigns every file in /boot. Depends on grub2-verify
-# Author: Bandie 
+# Author: Praden Florian based on Bandie Kojote
 # Licence: GNU-GPLv3
 
-# Script install dir
-SDIR="/srv/scripts/grub2"
+# Script basic conf
+SDIR="/usr/local/sbin"
+CFGDIR="/etc/grub-sign"
 
 # Source env variable
-if [[ -e env ]]; then
-    source env
+if [[ -e "${CFGDIR}/env" ]]; then
+    source "${CFGDIR}/env"
 else
-    source "${SDIR}/default.env"
+    source "${CFGDIR}/default.env"
 done;
-
 
 # Check if something is wrong
 "${SDIR}/grub-verify"

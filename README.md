@@ -171,3 +171,10 @@ Check your system thoroughly. Check it about malicious software. Check it about 
 - Run `grub-unsign` to unsign the bootloader.
 - Run `grub-mkconfig -o /boot/grub/grub.cfg` to write the new config.
 - Run `grub-sign` to sign the new changings.
+
+## Using file for passing gpg password
+
+- From: https://fedoraproject.org/wiki/Changes/Include_security_modules_in_efi_Grub2
+- save passphrase in ram (usualy /dev/shm/pass)
+- use GPGARGS="--pinentry-mode loopback --passphrase-file /dev/shm/pass"
+- shred the pass-file ```shred /dev/shm/pass```

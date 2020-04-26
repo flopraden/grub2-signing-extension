@@ -1,0 +1,30 @@
+#!/bin/bash
+
+HOSTNAME=$(hostname -s)
+FULLHOST=$(hostname)
+PASS=$(apg -a 1 -M LNC -m 30 -n 1)
+echo -ne "Password for grub signing key: "
+echo -ne ${PASS} |tee /etc/grub-sign/pass
+echo ""
+
+cat >/etc/grub-sign/gen-key-template  <<EOF
+     %echo Generating ${HOSTNAME} key for Grub
+     Key-Type: RSA
+     Key-usage: sign
+     Key-Length: 4096
+     Subkey-Type: RSA
+     Subkey-Length: 4096
+     Name-Real: ${FULLHOST}
+     Name-Comment: Grub signing key
+     Name-Email: grub.key@${FULLHOST}
+     Expire-Date: 0
+     Passphrase: ${PASS}
+     # Do a commit here, so that we can later print "done" :-)
+     %commit
+     %echo done
+EOF
+
+gpg --homedir "/etc/grub-sign/key" --batch --gen-key /etc/grub-sign/gen-key-template
+gpg --homedir "/etc/grub-sign/key" --export  "grub.key@${FULLHOST}" > /etc/grub-sign/key/grub.pub
+
+

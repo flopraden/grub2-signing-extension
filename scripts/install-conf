@@ -1,0 +1,21 @@
+#!/bin/bash
+# Copy defaults conf & generate keys
+
+if [[ ! -d /etc/grub-sign ]]; then
+    mkdir /etc/grub-sign
+    chown root.root /etc/grub-sign
+    chmod u=rwX,og= /etc/grub-sign
+fi;
+
+cp -i conf/* /etc/grub-sign/
+
+if [[ ! -d /etc/grub-sign/key ]]; then
+    mkdir /etc/grub-sign/key
+    chown root.root /etc/grub-sign/key
+    chmod u=rwX,og= /etc/grub-sign/key
+fi;
+
+if [[! -f /etc/grub-sign/key/grub.pub ]]; then
+    ./scripts/generate-key
+fi;
+
